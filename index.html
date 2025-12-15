@@ -78,8 +78,15 @@
       margin-top: 20px;
     }
 
-    .resultado {
+    .resultados-container {
       margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .resultado {
+      margin-top: 0;
       background: linear-gradient(135deg, #d1fae5, #a7f3d0);
       padding: 20px;
       border-left: 6px solid #10b981;
@@ -89,9 +96,42 @@
       color: #065f46;
     }
 
+    .resultado-total {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      border-left: 6px solid #3b82f6;
+      color: #1e3a8a;
+    }
+
+    .resultado-cinquenta {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border-left: 6px solid #f59e0b;
+      color: #78350f;
+    }
+
     .copy-btn {
       background-color: #10b981;
       margin-top: 10px;
+      width: 100%;
+    }
+
+    .copy-btn:hover {
+      background-color: #059669;
+    }
+
+    .copy-btn-total {
+      background-color: #3b82f6;
+    }
+
+    .copy-btn-total:hover {
+      background-color: #2563eb;
+    }
+
+    .copy-btn-cinquenta {
+      background-color: #f59e0b;
+    }
+
+    .copy-btn-cinquenta:hover {
+      background-color: #d97706;
     }
   </style>
 </head>
@@ -176,9 +216,22 @@
 
     <button id="calcular">Calcular</button>
 
-    <div class="resultado" id="resultado"></div>
-
-    <button class="copy-btn" id="copiar">Copiar Resultado</button>
+    <div class="resultados-container">
+      <div>
+        <div class="resultado" id="resultado"></div>
+        <button class="copy-btn" id="copiar">Copiar Resultado</button>
+      </div>
+      
+      <div>
+        <div class="resultado resultado-total" id="resultado-total"></div>
+        <button class="copy-btn copy-btn-total" id="copiar-total">Copiar Total Sem Desconto</button>
+      </div>
+      
+      <div>
+        <div class="resultado resultado-cinquenta" id="resultado-cinquenta"></div>
+        <button class="copy-btn copy-btn-cinquenta" id="copiar-cinquenta">Copiar 50%</button>
+      </div>
+    </div>
 
   </div>
 
@@ -286,7 +339,9 @@
 
     const total = taxaProporcional + pacote + opcional + vistoria + rastreador + recorrente;
 
+    // Card 1: Resultado com desconto proporcional (original)
     const texto =
+      `📊 CÁLCULO PROPORCIONAL\n\n` +
       `Dias restantes no mês: ${diasRestantes}\n` +
       `${(taxa * 100).toFixed(2)}% da FIPE (mensal): R$ ${taxaMensal.toFixed(2)}\n` +
       `Taxa proporcional (${diasRestantes} dias): R$ ${taxaProporcional.toFixed(2)}\n` +
@@ -297,7 +352,35 @@
       `Adesão/Vistoria: R$ ${vistoria.toFixed(2)}\n\n` +
       `TOTAL: R$ ${total.toFixed(2)}`;
 
+    // Card 2: Total sem desconto de dias (mensalidade cheia)
+    const totalSemDesconto = taxaMensal + pacote + opcional + vistoria + rastreador + recorrente;
+    const textoTotal =
+      `💎 MENSALIDADE COMPLETA\n\n` +
+      `Mensalidade completa (30 dias)\n` +
+      `${(taxa * 100).toFixed(2)}% da FIPE (mensal): R$ ${taxaMensal.toFixed(2)}\n` +
+      `Pacote: R$ ${pacote.toFixed(2)}\n` +
+      `Opcional: R$ ${opcional.toFixed(2)}\n` +
+      `Rastreador: R$ ${rastreador.toFixed(2)}\n` +
+      (recorrente > 0 ? `Recorrente (AGAUCHA): R$ ${recorrente.toFixed(2)}\n` : "") +
+      `Adesão/Vistoria: R$ ${vistoria.toFixed(2)}\n\n` +
+      `🎯 TOTAL SEM DESCONTO: R$ ${totalSemDesconto.toFixed(2)}`;
+
+    // Card 3: 50% do total sem desconto
+    const totalCinquentaPorcento = totalSemDesconto / 2;
+    const textoCinquenta =
+      `⚡ PAGAMENTO 50%\n\n` +
+      `50% da mensalidade completa\n` +
+      `${(taxa * 100).toFixed(2)}% da FIPE (mensal): R$ ${(taxaMensal / 2).toFixed(2)}\n` +
+      `Pacote: R$ ${(pacote / 2).toFixed(2)}\n` +
+      `Opcional: R$ ${(opcional / 2).toFixed(2)}\n` +
+      `Rastreador: R$ ${(rastreador / 2).toFixed(2)}\n` +
+      (recorrente > 0 ? `Recorrente (AGAUCHA): R$ ${(recorrente / 2).toFixed(2)}\n` : "") +
+      `Adesão/Vistoria: R$ ${(vistoria / 2).toFixed(2)}\n\n` +
+      `🎯 TOTAL 50%: R$ ${totalCinquentaPorcento.toFixed(2)}`;
+
     document.getElementById("resultado").innerText = texto;
+    document.getElementById("resultado-total").innerText = textoTotal;
+    document.getElementById("resultado-cinquenta").innerText = textoCinquenta;
   }
 
   function copiarResultado() {
@@ -306,8 +389,22 @@
     alert("Copiado!");
   }
 
+  function copiarResultadoTotal() {
+    const resultado = document.getElementById("resultado-total").innerText;
+    navigator.clipboard.writeText(resultado);
+    alert("Total sem desconto copiado!");
+  }
+
+  function copiarResultadoCinquenta() {
+    const resultado = document.getElementById("resultado-cinquenta").innerText;
+    navigator.clipboard.writeText(resultado);
+    alert("50% copiado!");
+  }
+
   document.getElementById("calcular").addEventListener("click", calcular);
   document.getElementById("copiar").addEventListener("click", copiarResultado);
+  document.getElementById("copiar-total").addEventListener("click", copiarResultadoTotal);
+  document.getElementById("copiar-cinquenta").addEventListener("click", copiarResultadoCinquenta);
 
 </script>
 
