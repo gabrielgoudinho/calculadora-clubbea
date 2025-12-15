@@ -1,1 +1,315 @@
-<!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8"> <title>Calculadora de Taxa - Multiclientes</title> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Fonte Inter moderna --> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"> <style> * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; background: linear-gradient(to right, #f0f4f8, #d9e2ec); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; } .container { width: 100%; max-width: 520px; background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); } .logo { display: block; margin: 0 auto 20px auto; max-width: 180px; } h2 { text-align: center; color: #1f2937; margin-bottom: 25px; font-size: 1.8rem; } label { display: block; margin-bottom: 6px; font-weight: 600; color: #334155; margin-top: 15px; } input, select, button { width: 100%; padding: 12px 15px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; } input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); } button { background-color: #3b82f6; color: #fff; font-weight: 600; cursor: pointer; margin-top: 20px; } .resultado { margin-top: 20px; background: linear-gradient(135deg, #d1fae5, #a7f3d0); padding: 20px; border-left: 6px solid #10b981; border-radius: 10px; font-weight: 500; white-space: pre-wrap; color: #065f46; } .copy-btn { background-color: #10b981; margin-top: 10px; } </style> </head> <body> <div class="container"> <img src="c.jpg" class="logo"> <h2>CALCULADORA CLUBBEA</h2> <!-- SELEÇÃO DO CLIENTE --> <label for="cliente">Cliente:</label> <select id="cliente" onchange="carregarPacotes()"> <option value="CONTINENTAL">CONTINENTAL</option> <option value="ANASC">ANASC</option> <option value="SUPERAVI">SUPERAVI</option> <option value="AGAUCHA">AGAUCHA</option> </select> <!-- DIA A USAR NO CÁLCULO --> <label for="diaEscolhido">Dia a considerar:</label> <input type="number" id="diaEscolhido" min="1" max="31" placeholder="Ex: 12"> <label for="fipe">Valor da FIPE (ex: 25000.00):</label> <input type="number" id="fipe" step="0.01" min="0" value="25000"> <!-- TAXA --> <label for="taxa">Selecione a taxa (%):</label> <select id="taxa"> <option value="0.0015">0,15%</option> <option value="0.0017">0,17%</option> <option value="0.0018">0,18%</option> <option value="0.0020">0,20%</option> <option value="0.0021">0,21%</option> <option value="0.0022">0,22%</option> <option value="0.0023">0,23%</option> <option value="0.0025">0,25%</option> <option value="0.0027">0,27%</option> <option value="0.0028">0,28%</option> <option value="0.0033">0,33%</option> <option value="0.0040">0,40%</option> <option value="0.0050">0,50%</option> </select> <!-- PACOTES --> <label for="pacote">Selecione o pacote:</label> <select id="pacote"></select> <!-- RASTREADOR --> <div id="rastreador-container"> <label for="rastreador">Rastreador:</label> <select id="rastreador"></select> </div> <!-- RECORRENTE (SOMENTE AGAUCHA) --> <div id="recorrente-container" style="display:none;"> <label for="recorrente">Cobrar recorrente?</label> <select id="recorrente"> <option value="0">Não</option> <option value="5.00">Ouro 1 - R$ 5,00</option> <option value="8.00">Ouro 2 - R$ 8,00</option> <option value="20.00">Ouro 3 - R$ 20,00</option> </select> </div> <label for="vistoria">Valor da vistoria:</label> <select id="vistoria"> <option value="200">R$ 200,00</option> <option value="175">R$ 175,00</option> <option value="150">R$ 150,00</option> <option value="125">R$ 125,00</option> <option value="100">R$ 100,00</option> <option value="75">R$ 75,00</option> <option value="50">R$ 50,00</option> <option value="0">R$ 00,00</option> </select> <label for="opcional">Valor do opcional (ex: 4.90):</label> <input type="number" id="opcional" value="0.00" step="0.01" min="0"> <button id="calcular">Calcular</button> <div class="resultado" id="resultado"></div> <button class="copy-btn" id="copiar">Copiar Resultado</button> </div> <script> // DADOS DOS PACOTES const pacotesClientes = { CONTINENTAL: [ ["27.78", "Start - R$ 27,78"], ["36.78", "Bronze - R$ 36,78"], ["45.77", "Prata - R$ 45,78"], ["50.78", "Ouro - R$ 50,78"], ["55.78", "Ouro especiais - R$ 55,78"], ["56.78", "Diamante - R$ 56,78"], ["75.78", "Frotas - R$ 75,78"] ], ANASC: [ ["31.97", "Start - R$ 31,97"], ["42.77", "Bronze - R$ 42,77"], ["46.87", "Prata - R$ 46,87"], ["51.87", "Ouro - R$ 51,87"], ["66.87", "Diamante - R$ 66,87"] ], SUPERAVI: [ ["32.04", "Start - R$ 32,04"], ["41.95", "Bronze - R$ 41,95"], ["46.05", "Prata - R$ 46,05"], ["51.05", "Ouro - R$ 51,05"] ], AGAUCHA: [ ["26.78", "Economy - R$ 26,78"], ["40.59", "Bronze - R$ 40,59"], ["44.69", "Prata - R$ 44,69"], ["49.69", "Ouro - R$ 49,69"], ["34.69", "Economy APP - R$ 34,69"], ["50.59", "Bronze APP - R$ 50,59"], ["59.69", "Prata APP - R$ 59,69"], ["69.69", "Ouro APP - R$ 69,69"] ] }; // RASTREADOR PARA AGAUCHA const rastreadorAgaucha = [ ["0", "Nenhum"], ["39.90", "R$ 39,90"], ["49.90", "R$ 49,90"] ]; // RASTREADOR PARA OUTRAS const rastreadorPadrao = [ ["0", "Não"], ["39.90", "Sim (R$ 39,90)"] ]; function carregarPacotes() { const cliente = document.getElementById("cliente").value; const pacoteSelect = document.getElementById("pacote"); const rastreadorSelect = document.getElementById("rastreador"); const recorrenteBox = document.getElementById("recorrente-container"); pacoteSelect.innerHTML = ""; rastreadorSelect.innerHTML = ""; // PACOTES pacotesClientes[cliente].forEach(p => { pacoteSelect.innerHTML += <option value="${p[0]}">${p[1]}</option>; }); // RASTREADOR const listaRastreador = cliente === "AGAUCHA" ? rastreadorAgaucha : rastreadorPadrao; listaRastreador.forEach(r => { rastreadorSelect.innerHTML += <option value="${r[0]}">${r[1]}</option>; }); // RECORRENTE recorrenteBox.style.display = cliente === "AGAUCHA" ? "block" : "none"; } carregarPacotes(); // Carrega padrão ao abrir // DIAS RESTANTES BASEADO NO DIA ESCOLHIDO function diasRestantesComBaseNoCampo() { const dia = parseInt(document.getElementById("diaEscolhido").value); const hoje = new Date(); const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate(); return ultimoDia - dia; } function calcular() { const fipe = parseFloat(document.getElementById("fipe").value); const taxa = parseFloat(document.getElementById("taxa").value); const pacote = parseFloat(document.getElementById("pacote").value); const vistoria = parseFloat(document.getElementById("vistoria").value); const opcional = parseFloat(document.getElementById("opcional").value); const rastreador = parseFloat(document.getElementById("rastreador").value); const recorrente = parseFloat(document.getElementById("recorrente")?.value || 0); const diasRestantes = diasRestantesComBaseNoCampo(); const taxaMensal = fipe * taxa; const taxaProporcional = (taxaMensal / 30) * diasRestantes; const total = taxaProporcional + pacote + opcional + vistoria + rastreador + recorrente; const texto = Dias restantes no mês: ${diasRestantes}\n + ${(taxa * 100).toFixed(2)}% da FIPE (mensal): R$ ${taxaMensal.toFixed(2)}\n + Taxa proporcional (${diasRestantes} dias): R$ ${taxaProporcional.toFixed(2)}\n + Pacote: R$ ${pacote.toFixed(2)}\n + Opcional: R$ ${opcional.toFixed(2)}\n + Rastreador: R$ ${rastreador.toFixed(2)}\n + (recorrente > 0 ? Recorrente (AGAUCHA): R$ ${recorrente.toFixed(2)}\n : "") + Adesão/Vistoria: R$ ${vistoria.toFixed(2)}\n\n + TOTAL: R$ ${total.toFixed(2)}; document.getElementById("resultado").innerText = texto; } function copiarResultado() { const resultado = document.getElementById("resultado").innerText; navigator.clipboard.writeText(resultado); alert("Copiado!"); } document.getElementById("calcular").addEventListener("click", calcular); document.getElementById("copiar").addEventListener("click", copiarResultado); </script> </body> </html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Taxa - Multiclientes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Fonte Inter moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      max-width: 180px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1f2937;
+      margin-bottom: 25px;
+      font-size: 1.8rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 15px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+
+    button {
+      background-color: #3b82f6;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .resultado {
+      margin-top: 20px;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      padding: 20px;
+      border-left: 6px solid #10b981;
+      border-radius: 10px;
+      font-weight: 500;
+      white-space: pre-wrap;
+      color: #065f46;
+    }
+
+    .copy-btn {
+      background-color: #10b981;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <img src="c.jpg" class="logo">
+
+    <h2>CALCULADORA CLUBBEA</h2>
+
+    <!-- SELEÇÃO DO CLIENTE -->
+    <label for="cliente">Cliente:</label>
+    <select id="cliente" onchange="carregarPacotes()">
+      <option value="CONTINENTAL">CONTINENTAL</option>
+      <option value="ANASC">ANASC</option>
+      <option value="SUPERAVI">SUPERAVI</option>
+      <option value="AGAUCHA">AGAUCHA</option>
+    </select>
+
+    <!-- DIA A USAR NO CÁLCULO -->
+    <label for="diaEscolhido">Dia a considerar:</label>
+    <input type="number" id="diaEscolhido" min="1" max="31" placeholder="Ex: 12">
+
+    <label for="fipe">Valor da FIPE (ex: 25000.00):</label>
+    <input type="number" id="fipe" step="0.01" min="0" value="25000">
+
+    <!-- TAXA -->
+    <label for="taxa">Selecione a taxa (%):</label>
+    <select id="taxa">
+      <option value="0.0015">0,15%</option>
+      <option value="0.0017">0,17%</option>
+      <option value="0.0018">0,18%</option>
+      <option value="0.0020">0,20%</option>
+      <option value="0.0021">0,21%</option>
+      <option value="0.0022">0,22%</option>
+      <option value="0.0023">0,23%</option>
+      <option value="0.0025">0,25%</option>
+      <option value="0.0027">0,27%</option>
+      <option value="0.0028">0,28%</option>
+      <option value="0.0033">0,33%</option>
+      <option value="0.0040">0,40%</option>
+      <option value="0.0050">0,50%</option>
+    </select>
+
+    <!-- PACOTES -->
+    <label for="pacote">Selecione o pacote:</label>
+    <select id="pacote"></select>
+
+    <!-- RASTREADOR -->
+    <div id="rastreador-container">
+      <label for="rastreador">Rastreador:</label>
+      <select id="rastreador"></select>
+    </div>
+
+    <!-- RECORRENTE (SOMENTE AGAUCHA) -->
+    <div id="recorrente-container" style="display:none;">
+      <label for="recorrente">Cobrar recorrente?</label>
+      <select id="recorrente">
+        <option value="0">Não</option>
+        <option value="5.00">Ouro 1 - R$ 5,00</option>
+        <option value="8.00">Ouro 2 - R$ 8,00</option>
+        <option value="20.00">Ouro 3 - R$ 20,00</option>
+      </select>
+    </div>
+
+    <label for="vistoria">Valor da vistoria:</label>
+    <select id="vistoria">
+      <option value="200">R$ 200,00</option>
+      <option value="175">R$ 175,00</option>
+      <option value="150">R$ 150,00</option>
+      <option value="125">R$ 125,00</option>
+      <option value="100">R$ 100,00</option>
+      <option value="75">R$ 75,00</option>
+      <option value="50">R$ 50,00</option>
+      <option value="0">R$ 00,00</option>
+    </select>
+
+    <label for="opcional">Valor do opcional (ex: 4.90):</label>
+    <input type="number" id="opcional" value="0.00" step="0.01" min="0">
+
+    <button id="calcular">Calcular</button>
+
+    <div class="resultado" id="resultado"></div>
+
+    <button class="copy-btn" id="copiar">Copiar Resultado</button>
+
+  </div>
+
+<script>
+
+  // DADOS DOS PACOTES
+ const pacotesClientes = {
+  CONTINENTAL: [
+    ["27.78", "Start - R$ 27,78"],
+    ["36.78", "Bronze - R$ 36,78"],
+    ["45.77", "Prata - R$ 45,78"],
+    ["50.78", "Ouro - R$ 50,78"],
+    ["55.78", "Ouro especiais - R$ 55,78"],
+    ["56.78", "Diamante - R$ 56,78"],
+    ["75.78", "Frotas - R$ 75,78"]
+  ],
+
+  ANASC: [
+    ["31.97", "Start - R$ 31,97"],
+    ["42.77", "Bronze - R$ 42,77"],
+    ["46.87", "Prata - R$ 46,87"],
+    ["51.87", "Ouro - R$ 51,87"],
+    ["66.87", "Diamante - R$ 66,87"]
+  ],
+
+  SUPERAVI: [
+    ["32.04", "Start - R$ 32,04"],
+    ["41.95", "Bronze - R$ 41,95"],
+    ["46.05", "Prata - R$ 46,05"],
+    ["51.05", "Ouro - R$ 51,05"]
+  ],
+
+  AGAUCHA: [
+    ["26.78", "Economy - R$ 26,78"],
+    ["40.59", "Bronze - R$ 40,59"],
+    ["44.69", "Prata - R$ 44,69"],
+    ["49.69", "Ouro - R$ 49,69"],
+    ["34.69", "Economy APP - R$ 34,69"],
+    ["50.59", "Bronze APP - R$ 50,59"],
+    ["59.69", "Prata APP - R$ 59,69"],
+    ["69.69", "Ouro APP - R$ 69,69"]
+  ]
+};
+
+  // RASTREADOR PARA AGAUCHA
+  const rastreadorAgaucha = [
+    ["0", "Nenhum"],
+    ["39.90", "R$ 39,90"],
+    ["49.90", "R$ 49,90"]
+  ];
+
+  // RASTREADOR PARA OUTRAS
+  const rastreadorPadrao = [
+    ["0", "Não"],
+    ["39.90", "Sim (R$ 39,90)"]
+  ];
+
+  function carregarPacotes() {
+    const cliente = document.getElementById("cliente").value;
+    const pacoteSelect = document.getElementById("pacote");
+    const rastreadorSelect = document.getElementById("rastreador");
+    const recorrenteBox = document.getElementById("recorrente-container");
+
+    pacoteSelect.innerHTML = "";
+    rastreadorSelect.innerHTML = "";
+
+    // PACOTES
+    pacotesClientes[cliente].forEach(p => {
+      pacoteSelect.innerHTML += `<option value="${p[0]}">${p[1]}</option>`;
+    });
+
+    // RASTREADOR
+    const listaRastreador = cliente === "AGAUCHA" ? rastreadorAgaucha : rastreadorPadrao;
+    listaRastreador.forEach(r => {
+      rastreadorSelect.innerHTML += `<option value="${r[0]}">${r[1]}</option>`;
+    });
+
+    // RECORRENTE
+    recorrenteBox.style.display = cliente === "AGAUCHA" ? "block" : "none";
+  }
+
+  carregarPacotes(); // Carrega padrão ao abrir
+
+  // DIAS RESTANTES BASEADO NO DIA ESCOLHIDO
+  function diasRestantesComBaseNoCampo() {
+    const dia = parseInt(document.getElementById("diaEscolhido").value);
+    const hoje = new Date();
+    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+    return ultimoDia - dia;
+  }
+
+  function calcular() {
+    const fipe = parseFloat(document.getElementById("fipe").value);
+    const taxa = parseFloat(document.getElementById("taxa").value);
+    const pacote = parseFloat(document.getElementById("pacote").value);
+    const vistoria = parseFloat(document.getElementById("vistoria").value);
+    const opcional = parseFloat(document.getElementById("opcional").value);
+    const rastreador = parseFloat(document.getElementById("rastreador").value);
+    
+    const recorrente = parseFloat(document.getElementById("recorrente")?.value || 0);
+
+    const diasRestantes = diasRestantesComBaseNoCampo();
+    const taxaMensal = fipe * taxa;
+    const taxaProporcional = (taxaMensal / 30) * diasRestantes;
+
+    const total = taxaProporcional + pacote + opcional + vistoria + rastreador + recorrente;
+
+    const texto =
+      `Dias restantes no mês: ${diasRestantes}\n` +
+      `${(taxa * 100).toFixed(2)}% da FIPE (mensal): R$ ${taxaMensal.toFixed(2)}\n` +
+      `Taxa proporcional (${diasRestantes} dias): R$ ${taxaProporcional.toFixed(2)}\n` +
+      `Pacote: R$ ${pacote.toFixed(2)}\n` +
+      `Opcional: R$ ${opcional.toFixed(2)}\n` +
+      `Rastreador: R$ ${rastreador.toFixed(2)}\n` +
+      (recorrente > 0 ? `Recorrente (AGAUCHA): R$ ${recorrente.toFixed(2)}\n` : "") +
+      `Adesão/Vistoria: R$ ${vistoria.toFixed(2)}\n\n` +
+      `TOTAL: R$ ${total.toFixed(2)}`;
+
+    document.getElementById("resultado").innerText = texto;
+  }
+
+  function copiarResultado() {
+    const resultado = document.getElementById("resultado").innerText;
+    navigator.clipboard.writeText(resultado);
+    alert("Copiado!");
+  }
+
+  document.getElementById("calcular").addEventListener("click", calcular);
+  document.getElementById("copiar").addEventListener("click", copiarResultado);
+
+</script>
+
+</body>
+</html>
