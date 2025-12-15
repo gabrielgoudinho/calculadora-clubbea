@@ -2,35 +2,29 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Calculadora de Taxa - Multiclientes</title>
+  <title>Calculadora Clubbea</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', sans-serif;
       background: linear-gradient(to right, #f0f4f8, #d9e2ec);
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
       padding: 20px;
     }
 
     .container {
       width: 100%;
-      max-width: 520px;
+      max-width: 540px;
       background: #fff;
       border-radius: 16px;
       padding: 30px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 25px rgba(0,0,0,.15);
     }
 
     h2 {
@@ -39,9 +33,9 @@
     }
 
     label {
-      display: block;
-      margin-top: 15px;
       font-weight: 600;
+      margin-top: 15px;
+      display: block;
     }
 
     input, select, button {
@@ -57,8 +51,8 @@
       background: #3b82f6;
       color: #fff;
       font-weight: 600;
-      margin-top: 20px;
       cursor: pointer;
+      margin-top: 20px;
     }
 
     .cards {
@@ -70,7 +64,8 @@
     .card {
       padding: 18px;
       border-radius: 12px;
-      font-weight: 600;
+      white-space: pre-wrap;
+      font-weight: 500;
     }
 
     .verde {
@@ -93,7 +88,6 @@
 
     .copy-btn {
       background: #10b981;
-      margin-top: 15px;
     }
   </style>
 </head>
@@ -129,7 +123,10 @@
   <select id="pacote"></select>
 
   <label>Rastreador</label>
-  <select id="rastreador"></select>
+  <select id="rastreador">
+    <option value="0">Não</option>
+    <option value="39.90">Sim (R$ 39,90)</option>
+  </select>
 
   <label>Vistoria</label>
   <select id="vistoria">
@@ -161,73 +158,79 @@ const pacotesClientes = {
   AGAUCHA: [["26.78","Economy"],["40.59","Bronze"]]
 };
 
-const rastreadorPadrao = [["0","Não"],["39.90","Sim"]];
-
 function carregarPacotes() {
-  const cliente = clienteSelect.value;
   pacote.innerHTML = "";
-  rastreador.innerHTML = "";
-
-  pacotesClientes[cliente].forEach(p =>
-    pacote.innerHTML += `<option value="${p[0]}">${p[1]} - R$ ${p[0]}</option>`
-  );
-
-  rastreadorPadrao.forEach(r =>
-    rastreador.innerHTML += `<option value="${r[0]}">${r[1]}</option>`
-  );
+  pacotesClientes[cliente.value].forEach(p => {
+    pacote.innerHTML += `<option value="${p[0]}">${p[1]} - R$ ${p[0]}</option>`;
+  });
 }
-
-const clienteSelect = document.getElementById("cliente");
-const pacote = document.getElementById("pacote");
-const rastreador = document.getElementById("rastreador");
 
 carregarPacotes();
 
 function diasRestantes() {
   const dia = parseInt(diaEscolhido.value);
   const hoje = new Date();
-  const ultimo = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
+  const ultimo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
   return ultimo - dia;
 }
 
+function montarTexto(titulo, taxaBase, total) {
+  return (
+`${titulo}
+Dias restantes no mês: ${diasRestantes()}
+Taxa mensal: R$ ${taxaBase.toFixed(2)}
+Pacote: R$ ${(+pacote.value).toFixed(2)}
+Opcional: R$ ${(+opcional.value).toFixed(2)}
+Rastreador: R$ ${(+rastreador.value).toFixed(2)}
+Adesão/Vistoria: R$ ${(+vistoria.value).toFixed(2)}
+
+TOTAL: R$ ${total.toFixed(2)}`
+  );
+}
+
 function calcular() {
-  const fipe = +fipeInput.value;
-  const taxa = +taxaSelect.value;
+  const fipeV = +fipe.value;
+  const taxaV = +taxa.value;
   const pacoteV = +pacote.value;
-  const vistoriaV = +vistoria.value;
   const opcionalV = +opcional.value;
   const rastreadorV = +rastreador.value;
+  const vistoriaV = +vistoria.value;
 
   const dias = diasRestantes();
-  const taxaMensal = fipe * taxa;
-  const taxaProp = (taxaMensal / 30) * dias;
+  const taxaMensal = fipeV * taxaV;
+  const taxaProporcional = (taxaMensal / 30) * dias;
 
-  const totalDesconto = taxaProp + pacoteV + vistoriaV + opcionalV + rastreadorV;
-  const totalCheio = taxaMensal + pacoteV + vistoriaV + opcionalV + rastreadorV;
+  const totalDesconto = taxaProporcional + pacoteV + opcionalV + rastreadorV + vistoriaV;
+  const totalCheio = taxaMensal + pacoteV + opcionalV + rastreadorV + vistoriaV;
   const total50 = totalCheio / 2;
 
-  cardDesconto.innerText =
-    `COM DESCONTO\nDias restantes: ${dias}\nTOTAL: R$ ${totalDesconto.toFixed(2)}`;
+  cardDesconto.innerText = montarTexto(
+    "🟢 COM DESCONTO (Proporcional)",
+    taxaProporcional,
+    totalDesconto
+  );
 
-  cardCheio.innerText =
-    `SEM DESCONTO\nTOTAL: R$ ${totalCheio.toFixed(2)}`;
+  cardCheio.innerText = montarTexto(
+    "🔵 SEM DESCONTO (Valor Cheio)",
+    taxaMensal,
+    totalCheio
+  );
 
-  card50.innerText =
-    `50% DO VALOR\nTOTAL: R$ ${total50.toFixed(2)}`;
+  card50.innerText = montarTexto(
+    "🟡 50% DO VALOR CHEIO",
+    taxaMensal / 2,
+    total50
+  );
 }
 
 function copiar() {
-  const texto =
+  navigator.clipboard.writeText(
     cardDesconto.innerText + "\n\n" +
     cardCheio.innerText + "\n\n" +
-    card50.innerText;
-
-  navigator.clipboard.writeText(texto);
+    card50.innerText
+  );
   alert("Copiado!");
 }
-
-const fipeInput = document.getElementById("fipe");
-const taxaSelect = document.getElementById("taxa");
 </script>
 
 </body>
