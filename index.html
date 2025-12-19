@@ -353,7 +353,7 @@
       `TOTAL: R$ ${total.toFixed(2)}`;
 
     // Card 2: Total sem desconto de dias (mensalidade cheia)
-    const totalSemDesconto = taxaMensal + pacote + opcional + vistoria + rastreador + recorrente;
+    const totalSemDesconto = taxaMensal + pacote + opcional + rastreador + recorrente;
     const textoTotal =
       `💎 MENSALIDADE COMPLETA\n\n` +
       `Mensalidade completa (30 dias)\n` +
@@ -362,7 +362,6 @@
       `Opcional: R$ ${opcional.toFixed(2)}\n` +
       `Rastreador: R$ ${rastreador.toFixed(2)}\n` +
       (recorrente > 0 ? `Recorrente (AGAUCHA): R$ ${recorrente.toFixed(2)}\n` : "") +
-      `Adesão/Vistoria: R$ ${vistoria.toFixed(2)}\n\n` +
       `🎯 TOTAL SEM DESCONTO: R$ ${totalSemDesconto.toFixed(2)}`;
 
     // Card 3: 50% do total sem desconto
@@ -375,7 +374,6 @@
       `Opcional: R$ ${(opcional / 2).toFixed(2)}\n` +
       `Rastreador: R$ ${(rastreador / 2).toFixed(2)}\n` +
       (recorrente > 0 ? `Recorrente (AGAUCHA): R$ ${(recorrente / 2).toFixed(2)}\n` : "") +
-      `Adesão/Vistoria: R$ ${(vistoria / 2).toFixed(2)}\n\n` +
       `🎯 TOTAL 50%: R$ ${totalCinquentaPorcento.toFixed(2)}`;
 
     document.getElementById("resultado").innerText = texto;
